@@ -1,0 +1,30 @@
+﻿# Legacy of Kain: Blood Omen 2 PL
+
+Nieoficjalne polskie napisy do cutscenek i dialogów w grze `Legacy of Kain: Blood Omen 2` autorstwa Grupy Polonizacyjnej Nosgothica.
+
+## Jak to działa
+
+Instalator nie zawiera plików gry. Znajduje twoją kopię gry (GOG lub Steam), a następnie:
+
+- w twoim pliku `bo2.exe` zmienia kilka bajtów i dopisuje krótką procedurę, dzięki której gra potrafi wyświetlać napisy (oryginalna gra ma mechanizm napisów, ale nie ma żadnych tekstów),
+- kopiuje pliki z napisami do folderu `data\texts` w folderze gry.
+
+Przed zmianą tworzona jest kopia zapasowa `bo2.exe.plbackup` obok pliku gry, dzięki której dezinstalator przywraca oryginał.
+
+Instalator potrzebuje kilku MB wolnego miejsca na dysku z grą i uprawnień administratora (gry często leżą w chronionych folderach).
+
+## Instalacja
+
+1. Zamknij grę i launcher.
+2. Uruchom instalator. Jeśli gra nie zostanie znaleziona automatycznie, wskaż jej główny folder (ten z plikiem `bo2.exe`).
+3. Uruchom grę. Napisy pojawiają się u dołu ekranu podczas dialogów.
+
+Jeśli instalator zgłosi nieobsługiwaną wersję, sprawdź integralność plików gry w kliencie GOG lub Steam i spróbuj ponownie.
+
+## Po aktualizacji lub sprawdzeniu plików gry
+
+Sprawdzenie integralności plików przywraca oryginalny `bo2.exe` i usuwa poprawkę. Wystarczy wtedy uruchomić skrót **Zastosuj spolszczenie ponownie** z menu Start.
+
+## Odinstalowanie
+
+Dezinstalator przywraca oryginalny `bo2.exe` i usuwa pliki z napisami. Gra musi być wtedy zamknięta.

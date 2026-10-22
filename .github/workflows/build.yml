@@ -1,0 +1,90 @@
+name: Build, test and package
+
+on:
+  push:
+    branches: [trunk]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure
+        run: cmake -S tools -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Tests (synthetic game files, no game data needed)
+        run: python -m unittest discover -s tools -v
+
+      - name: Smoke test of the executable (no arguments prints the usage and exits with 1)
+        shell: bash
+        run: |
+          exe=build/Bo2Patcher
+          [ "$RUNNER_OS" = "Windows" ] && exe=build/Release/Bo2Patcher.exe
+          set +e
+          "$exe"
+          [ $? -eq 1 ]
+
+      - name: Collect the executable
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cp build/Release/Bo2Patcher.exe dist/
+          else
+            cp build/Bo2Patcher dist/Bo2Patcher-linux-x86_64
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bo2Patcher-${{ runner.os }}
+          path: dist/*
+
+  installer:
+    needs: [build]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Bo2Patcher-Windows
+          path: dist
+      - name: Build the installer (Inno Setup is preinstalled on the runner)
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -like 'refs/tags/v*') { $env:GITHUB_REF_NAME.TrimStart('v') } else { "0.0.0-dev" }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" "/DPatcherExe=..\dist\Bo2Patcher.exe" "/DPatchFile=..\patch\bo2pl.patch" installer\bo2pl.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: dist/BO2-PL-Setup-*.exe
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, installer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --generate-notes
